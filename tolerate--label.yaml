@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-toleration
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+        - image: nginx
+          name: tolercon
+      tolerations:
+        - key: "app"
+          operator: "Equal"
+          value: "blue"
+          effect: "NoSchedule"
+      nodeSelector:
+         colour: blue
+---------------------------------------------
+
+# liveness.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-pod
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+      command: ['sh', '-c', 'echo livenessprob && sleep 360']
+      livenessProbe:
+        exec:
+          command: ['echo', 'hellow world!!!']
+        initialDelaySeconds: 5

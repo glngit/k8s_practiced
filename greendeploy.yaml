@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-green-dep
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        colour: green
+        app: frontend
+    spec:
+      containers:
+        - image: ubuntu
+          name: greenpods
+          ports:
+            - containerPort: 8080
+  selector:
+    matchLabels:
+      colour: green
+      app: frontend

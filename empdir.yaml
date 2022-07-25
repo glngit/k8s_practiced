@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: empty-dir-p
+spec:
+  containers:
+    - name: busybox1
+      image: busybox
+      command: ['sh', '-c', 'while true; do echo success!!!! > /output/output2.txt; sleep2; done']
+      volumeMounts:
+        - name: my-volume-empt
+          mountPath: /output
+    - name: busybox2
+      image: busybox
+      command: ['sh', '-c', 'while true; do cat /input/ouput2.txt; sleep5; done']
+      volumeMounts:
+        - name: my-volume-empt
+          mountPath: /inpput
+  volumes:
+    - name: my-volume-empt
+      emptyDir: {}

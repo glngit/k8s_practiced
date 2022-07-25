@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-blue-dep
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        colour: blue
+        app: frontend
+    spec:
+      containers:
+        - image: nginx
+          name: bluepods
+          ports:
+            - containerPort: 8080
+  selector:
+    matchLabels:
+      colour: blue
+      app: frontend
+
+# image: devopswithcloudhub/python_webpage:blue
+

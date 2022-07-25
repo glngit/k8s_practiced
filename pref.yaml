@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affin-deploy-pref
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: affnginxpref
+    spec:
+      containers:
+        - name: ngincon
+          image: nginx
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+               matchExpressions:
+                - key: disktype
+                  operator: In
+                  values:
+                    - ssd
+  selector:
+    matchLabels:
+      app: affnginxpref

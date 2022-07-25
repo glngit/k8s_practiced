@@ -1,0 +1,745 @@
+#firstpod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firstpod
+spec:
+  containers:
+    - image: nginx
+      name: c1
+-----------------------
+
+#vi firstpod1.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firstpod1
+  namespace: dev-ns
+spec:
+  containers:
+    - image: nginx
+      name: c1
+------------------------------
+
+#rc.yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: new-rc
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: new-pod
+      labels:
+        course: k8s
+    spec:
+      containers:
+      - name: c1
+        image: nginx
+---------------------------------------
+
+#rc2.yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: new-rc-test
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: firstpod
+      labels:
+        course: white
+    spec:
+      containers:
+      - name: c1
+        image: nginx
+-------------------------------
+
+#rs.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: new-rs
+spec:
+  replicas: 8
+  template:
+    metadata:
+      name: new-rs-pod
+      labels:
+        env: prod
+    spec:
+      containers:
+        - image: nginx
+          name: rscon
+  selector:
+    matchLabels:
+      env: prod
+------------------------------
+
+#deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-deployment
+spec:
+  replicas: 4
+  template:
+    metadata:
+      name: dep-pod
+      labels:
+        type: deploy
+    spec:
+      containers:
+        - image: nginx
+          name: dep-con
+  selector:
+    matchLabels:
+      type: deploy
+----------------------------
+
+#recreate.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-rec
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: rec-pod
+      labels:
+        type: recreate
+    spec:
+      containers:
+        - image: ubuntu/apache2
+          name: rec-con
+  selector:
+    matchLabels:
+      type: recreate
+  strategy:
+    type: Recreate
+--------------------------------
+
+# deploysvc.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      colour: green
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        colour: green
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+-------------------------------
+
+# svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: new-svc
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  type: NodePort
+  selector:
+    colour: green
+----------------------------
+
+# deploycip.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: depcip
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-svc
+  template:
+    metadata:
+      labels:
+        app: test-svc
+    spec:
+      containers:
+      - image: nginx
+        name: cipcon
+-----------------------------------
+
+# svccip.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-cip
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: test-svc
+--------------------------------
+
+# testpodc.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cip-testpod
+spec:
+  containers:
+    - image: radial/busyboxplus:curl
+      name: busybox
+      command: ['sh', '-c', 'while true; do sleep 4; done']
+# found ping problem, need to check
+----------------------------------------------------
+# Need to check
+# svclb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2022-06-12T17:13:15Z"
+  labels:
+    app: nginx
+  name: nginx
+  namespace: default
+  resourceVersion: "452989"
+  selfLink: /api/v1/namespaces/default/services/nginx
+  uid: fb0c038a-8d13-4c24-b8c6-7ff7c03576ba
+spec:
+  clusterIP: 10.96.44.188
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 32684
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+--------------------------------------
+
+# blue.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: can-b-dep
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: frontend
+        colour: blue
+    spec:
+      containers:
+        - image: ubuntu/apache2
+          name: bcon
+          ports:
+            - containerPort: 8080
+  selector:
+   matchLabels:
+     app: frontend
+     colour: blue
+---------------------------------
+
+#green.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: can-g-dep
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: frontend
+        colour: green
+    spec:
+      containers:
+        - image: nginx
+          name: gcon
+          ports:
+            - containerPort: 8080
+  selector:
+   matchLabels:
+     app: frontend
+     colour: green
+----------------------------------
+
+# svcgb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-gb
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: frontend
+  type: NodePort
+#selector labels  colour:blue / colour:green  for connect to only one deployment
+---------------------------------------
+
+# hostpath.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vol-hos-pod
+spec:
+  containers:
+    - image: busybox
+      name: busycon
+      command: ['sh', '-c', 'echo welcome to k8s!!!! > /output/k8s.txt']
+      volumeMounts:
+        - mountPath: /output
+          name: host-vol
+  volumes:
+    - name: host-vol
+      hostPath:
+        path: /var/data
+# Here we can use same volume-name, no of files creating. (for each file pod name must be different)
+----------------------------------
+
+# hostpath2.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vol-hos-pod2
+spec:
+  containers:
+    - image: busybox
+      name: busycon
+      command: ['sh', '-c', 'while true; do echo siva!!!! >> /output/siva.txt; sleep 5; done']
+      volumeMounts:
+        - mountPath: /output
+          name: host-vol2
+  volumes:
+    - name: host-vol2
+      hostPath:
+        path: /var/data
+# Here in this type we need to change volume-name every time, otherwise new file not creating. (for each file pod name must be different)
+--------------------------------------
+
+# emptdir.yaml   ////(Need to check this)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vol-empd-pod
+spec:
+  containers:
+    - name: busycon1
+      image: busybox
+      command: ['sh', '-c', 'while true; do echo success_emdi!!! >> /output2/output.txt; sleep5; done']
+      volumeMounts:
+        - name: my-vol-emdi
+          mountPath: /output2
+    - name: busycon2
+      image: busybox
+      command: ['sh', '-c', 'while true; do cat /input/output.txt; sleep 5; done']
+      volumeMounts:
+        - name: my-vol-emdi
+          mountPath: /inpput
+  volumes:
+    - name: my-vol-emdi
+      emptyDir: {}
+------------------------------
+
+# pvsp.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvvol-1
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 18.202.20.22        # check this everytime
+    path: /opt/sfw/
+    readOnly: false
+--------------------------------------
+
+# pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+--------------------------------------
+
+#pvc1.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc-claim1
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+-----------------------------------
+
+#sppod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-pod
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+      command: ['sh', '-c', 'while true; do echo siva!!!! >> /output/output.txt; sleep5; done']
+      volumeMounts:
+        - name: my-volume
+          mountPath: /output
+  volumes:
+    - name: my-volume
+      persistentVolumeClaim:
+        claimName: nfs-pvc-claim1
+-------------------------------------
+
+# nodename.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxnew
+  labels:
+    run: nginxnew
+spec:
+  nodeName: kubeworker3
+  containers:
+    - image: nginx
+      name: nginxnewcon
+-----------------------------------
+
+# nodesel.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deply
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: my-pod
+      labels:
+        env: test
+    spec:
+      containers:
+      - name: nginxcon
+        image: nginx
+      nodeSelector:
+        disktype: ssd
+  selector:
+    matchLabels:
+      env: test
+---------------------------------
+
+# req.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affin-deploy
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: affnginx
+    spec:
+      containers:
+        - name: ngincon
+          image: nginx
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd
+                      - thin
+  selector:
+    matchLabels:
+      app: affnginx
+------------------------------------
+
+# pref.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affin-deploy-pref
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: affnginxpref
+    spec:
+      containers:
+        - name: ngincon
+          image: nginx
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+               matchExpressions:
+                - key: disktype
+                  operator: In
+                  values:
+                    - ssd
+  selector:
+    matchLabels:
+      app: affnginxpref
+--------------------------------------
+
+# toleration.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-toleration
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+        - image: nginx
+          name: tolercon
+      tolerations:
+        - key: "app"
+          operator: "Equal"
+          value: "blue"
+          effect: "NoSchedule"
+--------------------------------------
+
+# tolerate&label.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-toleration
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+        - image: nginx
+          name: tolercon
+      tolerations:
+        - key: "app"
+          operator: "Equal"
+          value: "blue"
+          effect: "NoSchedule"
+      nodeSelector:
+         colour: blue
+-----------------------------------
+
+# liveexec.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-pod
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+      command: ['sh', '-c', 'echo livenessprob && sleep 360']
+      livenessProbe:
+        exec:
+          command: ['echo', 'hellow world!!!']
+        initialDelaySeconds: 5
+----------------------------------------
+
+# liveexecfail.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-pod2
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+      command: ['sh', '-c', 'echo livenessprob']
+      livenessProbe:
+        exec:
+          command: ['echo', 'hellow world!!!']
+        initialDelaySeconds: 5
+    # kubectl get pods -w (check this)
+---------------------------------------------
+
+# livehttp.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: livehttp-pod
+spec:
+  containers:
+    - image: nginx
+      name: livehttpcon
+      livenessProbe:
+        httpGet:
+          path: /   #/siva (siva user available in thease nodes so /siva also dont get error)
+          port: 80
+    #add label to this pod &  create service to this pod and check in the website, application running or not.
+------------------------------------------
+
+#livehttpfail.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: livehttp-pod2
+spec:
+  containers:
+    - image: nginx
+      name: livehttpcon
+      livenessProbe:
+        httpGet:
+          path: /ravi
+          port: 80
+    #add label to this pod &  create service to this pod and check in the website, application running or not.
+------------------------------
+
+# readi.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: readiness-pod
+spec:
+  containers:
+    - name: readicon
+      image: nginx
+      readinessProbe:
+        httpGet:
+          path: /health    # Here if health is created in /, then only application in ready state, then only trafic shares to this container.
+          port: 80
+# pod shows status as running but application is not running, you can see in Ready(0/1).
+----------------------------------
+
+# restartalw.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-always
+spec:
+  containers:
+    - image: busybox
+      name: buxycon
+      command: ['sh', '-c', 'sleep 10']
+-------------OR--------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-always
+spec:
+  restartPolicy: Always
+  containers:
+    - image: busybox
+      name: buxycon
+      command: ['sh', '-c', 'sleep 10']
+---------------------------------------------
+
+# restartonf.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-onfailure
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - image: busybox
+      name: buxycon
+      command: ['sh', '-c', 'sleep 10']
+# Here command to sleep 10 sec and completed process, so application or process not failuring here, so container does not restart.
+-----------------------------------------------
+
+# restartonf_fail.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-onfailure2
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - image: busybox
+      name: buxycon
+      command: ['sh', '-c', 'sleep 10 && abcdefghijklmsno']
+# Here the command is error, so application or process not completed so it will restrt the container again and again
+---------------------------------------------------
+
+# restartnever.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restart-never
+spec:
+  restartPolicy: Never
+  containers:
+    - image: busybox
+      name: buxycon
+      command: ['sh', '-c', 'sleep 10 && abcdefghijklmsno']
+# Here app or process error not completed, then also container will not restart ever.
+------------------------------------------------------
+
+# vi role.yaml
+apiVerion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dev-role
+  namespace: dev-ns
+rules:
+  apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get","create","list"]
+
+---------------------------------------------------
+
+# rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: dev-ns
+subjects:
+  kind: user
+
+
+

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxnew
+  labels:
+    run: nginxnew
+spec:
+  nodeName: kubeworker3
+  containers:
+    - image: nginx
+      name: nginxnewcon
